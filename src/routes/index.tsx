@@ -1,12 +1,27 @@
-import { useState, useEffect } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
+import { useState, useEffect, forwardRef } from 'react'
+import { createFileRoute, Link, createLink, type LinkComponent } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/')({ component: Home })
+
+// TODO: добавить типизированные сёрч-параметры (для фильтра)
 
 type Record = {
   id: string
   course: string
   user: string
+}
+
+interface BaseRecordLinkProps extends React.TableHTMLAttributes<HTMLTableRowElement> { }
+
+const BaseRecordLink = forwardRef<HTMLTableRowElement, BaseRecordLinkProps>((props, ref) => {
+  return <tr ref={ref} {...props}></tr>
+})
+
+const CreatedRecordLink = createLink(BaseRecordLink)
+
+const RecordLink: LinkComponent<typeof BaseRecordLink> = (props) => {
+  // @ts-expect-error // TODO: narrow children types
+  return <CreatedRecordLink {...props} style={{ cursor: "pointer" }} />
 }
 
 function Home() {
@@ -70,8 +85,10 @@ function Home() {
       <h1 className="text-4xl font-bold">FastAPI Integration</h1>
 
       <input
+        className="border"
         type="text"
         name="search"
+        placeholder='Поиск...'
         value={search ?? ""}
         onChange={e => setSearch(e.target.value)}
       />
@@ -98,11 +115,13 @@ function Home() {
                 </tr>
               )
               : records.map(({ id, course, user }) => (
-                <tr key={id}>
-                  <td>№{id}</td>
-                  <td>{course}</td>
-                  <td>№{user}</td>
-                </tr>
+                <RecordLink to="/records/$id" params={{ id }} key={id}>
+                  <>
+                    <td>№{id}</td>
+                    <td>{course}</td>
+                    <td>№{user}</td>
+                  </>
+                </RecordLink>
               ))
             }
           </tbody>
