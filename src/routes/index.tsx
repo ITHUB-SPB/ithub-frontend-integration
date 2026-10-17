@@ -1,11 +1,20 @@
 import { useState, useEffect, forwardRef } from 'react'
 import { createFileRoute, createLink, type LinkComponent } from '@tanstack/react-router'
 
-export const Route = createFileRoute('/')({ component: Home })
+type UserSearch = {
+  username?: string
+}
 
-// TODO: добавить типизированные сёрч-параметры (для фильтра)
+export const Route = createFileRoute('/')({
+  validateSearch: (search: Record<string, unknown>): UserSearch => ({
+    username: (search?.username as string) || undefined
+  }),
+  component: Home
+})
 
-type Record = {
+// TODO: добавлять фильтрацию в адрес
+
+type RecordItem = {
   id: string
   course: string
   user: string
@@ -25,10 +34,12 @@ const RecordLink: LinkComponent<typeof BaseRecordLink> = (props) => {
 }
 
 function Home() {
-  const [records, setRecords] = useState<Record[]>([])
+  const q = Route.useSearch()
+
+  const [records, setRecords] = useState<RecordItem[]>([])
   const [isLoading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<Error | null>(null)
-  const [search, setSearch] = useState<string | null>(null)
+  const [search, setSearch] = useState<string | null>(q.username ?? null)
 
   useEffect(() => {
     loadRecords()
@@ -123,10 +134,6 @@ function Home() {
           </tbody>
         </table>
       )}
-
-      {/* <p className="mt-4 text-lg">
-        <button type="button" onClick={handleClick}>Загрузить записи</button>
-      </p> */}
     </div>
   )
 }
