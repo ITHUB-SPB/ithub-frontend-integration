@@ -31,7 +31,6 @@ function Home() {
   const [search, setSearch] = useState<string | null>(null)
 
   useEffect(() => {
-    setLoading(true)
     loadRecords()
   }, [search])
 
@@ -58,6 +57,8 @@ function Home() {
 
   const loadRecords = async () => {
     try {
+      setLoading(true)
+      setError(null)
       const records = await getRecords(search)
       setRecords(records)
     } catch (error: unknown) {
@@ -65,11 +66,6 @@ function Home() {
     }
     setLoading(false)
   }
-
-  // const handleClick = async () => {
-  //   const records = await getRecords()
-  //   setRecords(records)
-  // }
 
   if (error) {
     return (
@@ -117,9 +113,9 @@ function Home() {
               : records.map(({ id, course, user }) => (
                 <RecordLink to="/records/$id" params={{ id }} key={id}>
                   <>
-                    <td>№{id}</td>
+                    <td>№ {id}</td>
                     <td>{course}</td>
-                    <td>№{user}</td>
+                    <td>{user}</td>
                   </>
                 </RecordLink>
               ))
