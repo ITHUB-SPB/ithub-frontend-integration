@@ -6,12 +6,15 @@ export const Route = createFileRoute('/login')({
 })
 
 function Login() {
+  const { setAccessToken } = Route.useRouteContext()
+  const navigate = Route.useNavigate()
+
   const loginUrl = 'http://127.0.0.1:8000/users/login'
 
   const handleSubmit = (e: SubmitEvent) => {
     e.preventDefault()
     const formData = new FormData(e.target);
-    
+
     const username = formData.get('username') as string;
     const password = formData.get('password') as string;
 
@@ -25,9 +28,12 @@ function Login() {
         password
       })
     }).then(response => response.json()).then(data => {
-      console.log(data)
+      if (!data.access_token) {
+        throw new Error('No access token provided')
+      }
+      setAccessToken(data.access_token)
+      navigate({ to: '/' })
     }).catch(error => console.error(error))
-
   }
 
   return (

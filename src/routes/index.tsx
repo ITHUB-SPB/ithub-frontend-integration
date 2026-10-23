@@ -1,11 +1,16 @@
 import { useState, useEffect, forwardRef } from 'react'
-import { createFileRoute, createLink, type LinkComponent } from '@tanstack/react-router'
+import { createFileRoute, createLink, redirect, type LinkComponent } from '@tanstack/react-router'
 
 type UserSearch = {
   username?: string
 }
 
 export const Route = createFileRoute('/')({
+  beforeLoad: ({ context }) => {
+    if (!context.accessToken) {
+      throw redirect({ to: '/login' })
+    }
+  },
   validateSearch: (search: Record<string, unknown>): UserSearch => ({
     username: (search?.username as string) || undefined
   }),
@@ -34,6 +39,7 @@ const RecordLink: LinkComponent<typeof BaseRecordLink> = (props) => {
 }
 
 function Home() {
+  const { accessToken } = Route.useRouteContext()
   const q = Route.useSearch()
 
   const [records, setRecords] = useState<RecordItem[]>([])
@@ -53,7 +59,12 @@ function Home() {
         url.searchParams.append('search', searchQuery)
       }
 
-      const response = await fetch(url.toString())
+      const response = await fetch(url.toString(), {
+        credentials: 'include',
+        headers: {
+          "Authorization": `Bearer ${accessToken}`
+        }
+      })
 
       if (!response.ok) {
         throw new Error('Сетевая ошибка')
