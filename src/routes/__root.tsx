@@ -1,4 +1,4 @@
-import { Outlet, createRootRoute, HeadContent } from '@tanstack/react-router'
+import { Outlet, createRootRouteWithContext, HeadContent } from '@tanstack/react-router'
 
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
@@ -6,7 +6,11 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 import '../styles.css'
 import picoCss from '../styles/pico.classless.css?url'
 
-export const Route = createRootRoute({
+type UserContext = {
+  accessToken: string | null
+}
+
+export const Route = createRootRouteWithContext<UserContext>()({
   component: RootComponent,
   head: () => ({
     links: [
@@ -15,7 +19,7 @@ export const Route = createRootRoute({
         "href": picoCss
       }
     ]
-  })
+  }),
 })
 
 function RootComponent() {
