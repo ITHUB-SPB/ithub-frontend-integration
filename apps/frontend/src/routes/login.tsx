@@ -1,5 +1,6 @@
-import { createFileRoute } from '@tanstack/react-router'
 import type { SubmitEvent } from 'react'
+import { createFileRoute } from '@tanstack/react-router'
+import apiClient from '#/api/client'
 
 export const Route = createFileRoute('/login')({
   component: Login,
@@ -12,14 +13,17 @@ function Login() {
   const handleSubmit = (e: SubmitEvent) => {
     e.preventDefault()
     const formData = new FormData(e.target);
-
     const username = formData.get('username') as string;
     const password = formData.get('password') as string;
 
-    .then(response => response.json()).then(data => {
-      setAccessToken(data.access_token)
-      navigate({ to: '/' })
-    }).catch(error => console.error(error))
+    apiClient.auth.login({
+      username,
+      password
+    })
+      .then(data => {
+        setAccessToken(data.access_token)
+        navigate({ to: '/' })
+      }).catch(error => console.error(error))
   }
 
   return (

@@ -32,7 +32,7 @@ const allRecordsFn = async ({
 const loginFn = async ({
     username,
     password
-}: { username: string, password: string }) => {
+}: { username: string, password: string }): Promise<{ access_token: string }> => {
     return fetcher({
         path: "/auth/login",
         method: "post",
@@ -47,6 +47,7 @@ const loginFn = async ({
         if (!data.access_token) {
             throw new Error('No access token provided')
         }
+        return data
     })
 }
 

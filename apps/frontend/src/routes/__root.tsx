@@ -9,6 +9,7 @@ import picoCss from '../styles/pico.classless.css?url'
 type UserContext = {
   accessToken: string | null
   setAccessToken: (token: string | null) => void
+  username: string | null
 }
 
 export const Route = createRootRouteWithContext<UserContext>()({
