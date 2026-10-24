@@ -1,6 +1,8 @@
 import { useState, useEffect, forwardRef } from 'react'
 import { createFileRoute, createLink, redirect, type LinkComponent } from '@tanstack/react-router'
 
+import apiClient from '#/api/client'
+
 type UserSearch = {
   username?: string
 }
@@ -51,37 +53,14 @@ function Home() {
     loadRecords()
   }, [search])
 
-  const getRecords = async (searchQuery: string | null) => {
-    try {
-      const url = new URL('/records', 'http://127.0.0.1:8000')
-
-      if (searchQuery) {
-        url.searchParams.append('search', searchQuery)
-      }
-
-      const response = await fetch(url.toString(), {
-        credentials: 'include',
-        headers: {
-          "Authorization": `Bearer ${accessToken}`
-        }
-      })
-
-      if (!response.ok) {
-        throw new Error('Сетевая ошибка')
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error(error)
-      throw new Error('Сетевая ошибка')
-    }
-  }
-
   const loadRecords = async () => {
     try {
       setLoading(true)
       setError(null)
-      const records = await getRecords(search)
+      const records = await apiClient.records.all({
+        accessToken,
+        authorId: "testuser" // TODO
+      })
       setRecords(records)
     } catch (error: unknown) {
       setError(error as Error)

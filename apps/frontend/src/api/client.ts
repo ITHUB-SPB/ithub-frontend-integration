@@ -1,0 +1,63 @@
+import fetcher from "./fetcher"
+
+const allRecordsFn = async ({
+    accessToken,
+    authorId
+}: {
+    accessToken: string | null,
+    authorId?: string
+}) => {
+    const headers = {
+        "Content-Type": "application/json"
+    } as const
+
+    if (accessToken) {
+        Object.assign(headers, { "Authorization": `Bearer ${accessToken}` })
+    }
+
+    const searchParams = {}
+
+    if (authorId) {
+        Object.assign(searchParams, { "author_id": authorId })
+    }
+
+    return fetcher({
+        path: "/records",
+        headers,
+        method: "get",
+        searchParams
+    })
+}
+
+const loginFn = async ({
+    username,
+    password
+}: { username: string, password: string }) => {
+    return fetcher({
+        path: "/auth/login",
+        method: "post",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: new URLSearchParams({
+            username,
+            password
+        })
+    }).then(data => {
+        if (!data.access_token) {
+            throw new Error('No access token provided')
+        }
+    })
+}
+
+export default {
+    records: {
+        all: allRecordsFn,
+        create: null
+    },
+    auth: {
+        login: loginFn,
+        register: null,
+        me: null
+    }
+}
