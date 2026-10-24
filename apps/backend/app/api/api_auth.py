@@ -68,9 +68,4 @@ def login(
 def get_current(
 	current_user: CurrentUser,
 ) -> schema.UserResponse:
-	"""
-	Получает текущего пользователя через инъекцию зависимостей, в случае
-	ошибки выбрасывает CredentialsHTTPException. Иначе - отвечает согласно схеме.
-	"""
-
-	raise NotImplementedError
+	return current_user
