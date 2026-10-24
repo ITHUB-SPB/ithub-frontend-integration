@@ -38,17 +38,13 @@ const Wrapper = () => {
     } else {
       localStorage.setItem(storageKey, accessToken)
 
-      apiClient.auth.me({
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
-      }).then(data => {
-        setUsername(data.username)
-      })
+      apiClient.auth.me({ accessToken })
+        .then(data => {
+          setUsername(data.username)
+        })
         .catch((_: unknown) => {
           setAccessToken(null)
         })
-
     }
   }, [accessToken])
 

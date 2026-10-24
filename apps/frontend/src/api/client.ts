@@ -29,6 +29,26 @@ const allRecordsFn = async ({
     })
 }
 
+const getMeFn = async ({
+    accessToken,
+}: {
+    accessToken: string | null,
+}): Promise<{ username: string, role: "user" | "admin" }> => {
+    const headers = {
+        "Content-Type": "application/json"
+    } as const
+
+    if (accessToken) {
+        Object.assign(headers, { "Authorization": `Bearer ${accessToken}` })
+    }
+
+    return fetcher({
+        path: "/auth/me",
+        headers,
+        method: "get",
+    })
+}
+
 const loginFn = async ({
     username,
     password
@@ -59,6 +79,6 @@ export default {
     auth: {
         login: loginFn,
         register: null,
-        me: null
+        me: getMeFn
     }
 }
