@@ -8,9 +8,19 @@ type UserSearch = {
 }
 
 export const Route = createFileRoute('/')({
-  beforeLoad: ({ context }) => {
+  beforeLoad: async ({ context }) => {
     if (!context.accessToken) {
       throw redirect({ to: '/login' })
+    }
+
+    if (!context.username) {
+      try {
+        const { username } = await apiClient.auth.me({ accessToken: context.accessToken })
+        return { ...context, username }
+      } catch {
+        context.setAccessToken(null)
+        throw redirect({ to: '/login' })
+      }
     }
   },
   validateSearch: (search: Record<string, unknown>): UserSearch => ({
@@ -23,8 +33,15 @@ export const Route = createFileRoute('/')({
 
 type RecordItem = {
   id: string
-  course: string
-  user: string
+  course: {
+    id: string,
+    title: string
+  }
+  author: {
+    username: string,
+    role: 'user'
+  }
+  created_at: string
 }
 
 interface BaseRecordLinkProps extends React.TableHTMLAttributes<HTMLTableRowElement> { }
@@ -41,17 +58,21 @@ const RecordLink: LinkComponent<typeof BaseRecordLink> = (props) => {
 }
 
 function Home() {
-  const { accessToken } = Route.useRouteContext()
+  const { accessToken, username } = Route.useRouteContext()
   const q = Route.useSearch()
 
   const [records, setRecords] = useState<RecordItem[]>([])
   const [isLoading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<Error | null>(null)
-  const [search, setSearch] = useState<string | null>(q.username ?? null)
+  // const [search, setSearch] = useState<string | null>(q.username ?? null)
+
+  // useEffect(() => {
+  //   loadRecords()
+  // }, [search])
 
   useEffect(() => {
     loadRecords()
-  }, [search])
+  }, [])
 
   const loadRecords = async () => {
     try {
@@ -59,9 +80,9 @@ function Home() {
       setError(null)
       const records = await apiClient.records.all({
         accessToken,
-        authorId: "testuser" // TODO
+        authorId: username
       })
-      setRecords(records)
+      setRecords(records.records)
     } catch (error: unknown) {
       setError(error as Error)
     }
@@ -79,16 +100,20 @@ function Home() {
 
   return (
     <div className="p-8">
+      <nav>
+        <span>{username}</span>
+      </nav>
+
       <h1 className="text-4xl font-bold">FastAPI Integration</h1>
 
-      <input
+      {/* <input
         className="border"
         type="text"
         name="search"
         placeholder='Поиск...'
         value={search ?? ""}
         onChange={e => setSearch(e.target.value)}
-      />
+      /> */}
 
       {isLoading ? (
         <div className="p-8">
@@ -101,7 +126,8 @@ function Home() {
             <tr>
               <td>№</td>
               <td>Курс</td>
-              <td>Пользователь</td>
+              <td>Создан</td>
+              {/* <td>Пользователь</td> */}
             </tr>
           </thead>
           <tbody>
@@ -111,12 +137,13 @@ function Home() {
                   <td colSpan={3}>Записей пока нет</td>
                 </tr>
               )
-              : records.map(({ id, course, user }) => (
+              : records.map(({ id, course, created_at, author }) => (
                 <RecordLink to="/records/$id" params={{ id }} key={id}>
                   <>
                     <td>№ {id}</td>
-                    <td>{course}</td>
-                    <td>{user}</td>
+                    <td>{course.title}</td>
+                    {/* <td>{author.username}</td> */}
+                    <td>{created_at}</td>
                   </>
                 </RecordLink>
               ))

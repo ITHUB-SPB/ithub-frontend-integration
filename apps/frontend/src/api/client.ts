@@ -74,7 +74,8 @@ const loginFn = async ({
 export default {
     records: {
         all: allRecordsFn,
-        create: null
+        create: null,
+        delete: null,
     },
     auth: {
         login: loginFn,
