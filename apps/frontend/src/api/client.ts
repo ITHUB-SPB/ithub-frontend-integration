@@ -5,7 +5,7 @@ const allRecordsFn = async ({
     authorId
 }: {
     accessToken: string | null,
-    authorId?: string
+    authorId: string | null
 }) => {
     const headers = {
         "Content-Type": "application/json"

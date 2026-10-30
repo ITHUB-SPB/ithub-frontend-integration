@@ -2,6 +2,7 @@ import { useState, useEffect, forwardRef } from 'react'
 import { createFileRoute, createLink, redirect, type LinkComponent } from '@tanstack/react-router'
 
 import apiClient from '#/api/client'
+import useQuery from '#/hooks/use-query'
 
 type UserSearch = {
   username?: string
@@ -44,6 +45,11 @@ type RecordItem = {
   created_at: string
 }
 
+type RecordQueryParams = {
+  accessToken: string | null;
+  authorId: string | null;
+}
+
 interface BaseRecordLinkProps extends React.TableHTMLAttributes<HTMLTableRowElement> { }
 
 const BaseRecordLink = forwardRef<HTMLTableRowElement, BaseRecordLinkProps>((props, ref) => {
@@ -61,33 +67,24 @@ function Home() {
   const { accessToken, username } = Route.useRouteContext()
   const q = Route.useSearch()
 
-  const [records, setRecords] = useState<RecordItem[]>([])
-  const [isLoading, setLoading] = useState<boolean>(false)
-  const [error, setError] = useState<Error | null>(null)
+  const {
+    data: records,
+    isLoading,
+    error,
+  } = useQuery<RecordItem[], RecordQueryParams>({
+    initialData: [],
+    queryFn: apiClient.records.all,
+    queryParams: {
+      accessToken,
+      authorId: username
+    }
+  })
+
   // const [search, setSearch] = useState<string | null>(q.username ?? null)
 
   // useEffect(() => {
   //   loadRecords()
   // }, [search])
-
-  useEffect(() => {
-    loadRecords()
-  }, [])
-
-  const loadRecords = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const records = await apiClient.records.all({
-        accessToken,
-        authorId: username
-      })
-      setRecords(records.records)
-    } catch (error: unknown) {
-      setError(error as Error)
-    }
-    setLoading(false)
-  }
 
   if (error) {
     return (
