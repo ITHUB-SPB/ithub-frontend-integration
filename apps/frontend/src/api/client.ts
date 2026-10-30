@@ -1,28 +1,57 @@
 import fetcher from "./fetcher";
 
+export type Course = {
+    id: string;
+    title: string;
+};
+
+export type RecordsListResponse = {
+    data: unknown[];
+    data_count: number;
+};
+
+const allCoursesFn = async (): Promise<Course[]> => {
+    return fetcher({
+        path: "/courses/",
+        method: "get",
+    });
+};
+
 const allRecordsFn = async ({
     accessToken,
     authorId,
+    courseId,
+    limit,
 }: {
-    accessToken: string | null;
-    authorId: string | null;
-}) => {
-    const headers = {
+    accessToken?: string | null;
+    authorId?: string | null;
+    courseId?: string;
+    limit?: number;
+}): Promise<RecordsListResponse> => {
+    const headers: Record<string, string> = {
         "Content-Type": "application/json",
-    } as const;
+    };
 
     if (accessToken) {
-        Object.assign(headers, { Authorization: `Bearer ${accessToken}` });
+        headers.Authorization = `Bearer ${accessToken}`;
     }
 
-    const searchParams = {};
+    const searchParams: Record<string, string> = {};
 
     if (authorId) {
-        Object.assign(searchParams, { author: authorId });
+        searchParams.author = authorId;
+    }
+
+    if (courseId) {
+        searchParams.course = courseId;
+    }
+
+    if (limit !== undefined) {
+        searchParams.limit = String(limit);
     }
 
     return fetcher({
-        path: "/records",
+        path: "/records/",
         headers,
         method: "get",
         searchParams,
@@ -34,12 +63,12 @@ const getMeFn = async ({
 }: {
     accessToken: string | null;
 }): Promise<{ username: string; role: "user" | "admin" }> => {
-    const headers = {
+    const headers: Record<string, string> = {
         "Content-Type": "application/json",
-    } as const;
+    };
 
     if (accessToken) {
-        Object.assign(headers, { Authorization: `Bearer ${accessToken}` });
+        headers.Authorization = `Bearer ${accessToken}`;
     }
 
     return fetcher({
@@ -55,7 +84,7 @@ const loginFn = async ({
 }: {
     username: string;
     password: string;
-}): Promise<{ data: { access_token: string } }> => {
+}): Promise<{ access_token: string }> => {
     return fetcher({
         path: "/auth/login",
         method: "post",
@@ -70,6 +99,7 @@ const loginFn = async ({
         if (!data.access_token) {
             throw new Error("No access token provided");
         }
+
         return data;
     });
 };
@@ -95,6 +125,9 @@ const registerFn = async ({
 };
 
 export default {
+    courses: {
+        all: allCoursesFn,
+    },
     records: {
         all: allRecordsFn,
         create: null,
