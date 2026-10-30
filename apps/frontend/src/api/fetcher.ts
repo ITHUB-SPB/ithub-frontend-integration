@@ -12,7 +12,7 @@ type SearchParams = Record<string, string | number>;
 type FetcherOptions = {
     path: `/${string}`;
     headers: Headers;
-    method: "get" | "post";
+    method: "get" | "post" | "delete";
     body?: string | URLSearchParams;
     searchParams?: SearchParams;
 };

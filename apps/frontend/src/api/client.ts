@@ -6,13 +6,28 @@ export type Course = {
 };
 
 export type RecordsListResponse = {
-    data: unknown[];
+    data: RecordResponse[];
     data_count: number;
 };
 
+export type RecordResponse = {
+    id: number;
+    created_at: string;
+    course: Course;
+    author: {
+        username: string;
+        role: "user" | "admin";
+    };
+};
+
 const allCoursesFn = async (): Promise<Course[]> => {
+    const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+    };
+
     return fetcher({
         path: "/courses/",
+        headers,
         method: "get",
     });
 };
@@ -124,6 +139,22 @@ const registerFn = async ({
     });
 };
 
+const deleteRecordFn = async ({
+    accessToken,
+    id,
+}: {
+    accessToken: string;
+    id: number;
+}): Promise<null> => {
+    return fetcher({
+        path: `/records/${id}`,
+        method: "delete",
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+        },
+    });
+};
+
 export default {
     courses: {
         all: allCoursesFn,
@@ -131,7 +162,7 @@ export default {
     records: {
         all: allRecordsFn,
         create: null,
-        delete: null,
+        delete: deleteRecordFn,
     },
     auth: {
         login: loginFn,

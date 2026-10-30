@@ -49,69 +49,55 @@ function Home() {
 
     if (error) {
         return (
-            <main className="p-8">
-                <h1 className="text-4xl font-bold">Доступные курсы</h1>
+            <main>
+                <h1>Доступные курсы</h1>
                 <p>Не удалось загрузить информацию о курсах: {error.message}</p>
             </main>
         );
     }
 
     return (
-        <main className="p-8">
-            <header className="mb-8">
-                <h1 className="text-4xl font-bold">FastAPI Integration</h1>
-                <p className="mt-2">
+        <main>
+            <header>
+                <h1>FastAPI Integration</h1>
+                <p>
                     Ознакомьтесь с доступными курсами и подайте заявку на
                     обучение.
                 </p>
             </header>
 
-            <section className="mb-8">
-                <h2 className="mb-4 text-2xl font-bold">Доступные курсы</h2>
+            <section>
+                <h2>Доступные курсы</h2>
 
                 {isLoading ? (
                     <p>Загрузка курсов...</p>
                 ) : courses.length === 0 ? (
                     <p>Пока нет доступных курсов.</p>
                 ) : (
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
                         {courses.map((course) => (
-                            <article
-                                key={course.id}
-                                className="rounded-lg border p-4"
-                            >
-                                <h3 className="text-xl font-semibold">
-                                    {course.title}
-                                </h3>
+                            <article key={course.id}>
+                                <h3>{course.title}</h3>
 
-                                <p className="mt-2">
-                                    Подано заявок: {course.recordsCount}
-                                </p>
+                                <p>Подано заявок: {course.recordsCount}</p>
                             </article>
                         ))}
                     </div>
                 )}
             </section>
 
-            <section className="rounded-lg border p-6">
-                <h2 className="text-2xl font-bold">Хотите подать заявку?</h2>
+            <section>
+                <h2>Хотите подать заявку?</h2>
 
-                <p className="mt-2">
+                <p>
                     Войдите в существующий аккаунт или зарегистрируйтесь, чтобы
                     продолжить.
                 </p>
 
-                <div className="mt-4 flex flex-wrap gap-4">
-                    <Link to="/login" className="rounded-md border px-4 py-2">
-                        Войти
-                    </Link>
+                <div>
+                    <Link to="/login">Войти</Link>
 
-                    <Link
-                        to="/register"
-                        className="rounded-md border px-4 py-2"
-                    >
-                        Зарегистрироваться
-                    </Link>
+                    <Link to="/register">Зарегистрироваться</Link>
                 </div>
             </section>
         </main>

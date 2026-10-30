@@ -42,8 +42,8 @@ function Register() {
     };
 
     return (
-        <main className="p-8">
-            <h1 className="text-4x1 font-bold">Регистрация</h1>
+        <main>
+            <h1>Регистрация</h1>
 
             {error && <p>Ошибка: {error.message}</p>}
 

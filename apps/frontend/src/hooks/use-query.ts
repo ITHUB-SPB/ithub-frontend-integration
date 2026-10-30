@@ -14,6 +14,7 @@ export default function useQuery<ResultData, QueryParams>({
     const [data, setData] = useState<ResultData>(initialData);
     const [isLoading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<Error | null>(null);
+    const [reload, setReload] = useState<number>(0);
 
     useEffect(() => {
         let cancelled = false;
@@ -44,7 +45,11 @@ export default function useQuery<ResultData, QueryParams>({
         return () => {
             cancelled = true;
         };
-    }, []);
+    }, [reload]);
 
-    return { data, isLoading, error };
+    const refetch = () => {
+        setReload((previous) => previous + 1);
+    };
+
+    return { data, isLoading, error, refetch };
 }

@@ -57,8 +57,8 @@ function RecordDetails() {
 
   if (error) {
     return (
-      <div className="p-8">
-        <h1 className="text-4xl font-bold">FastAPI Integration</h1>
+      <div>
+        <h1>FastAPI Integration</h1>
         <Link to="/">Все записи</Link>
         <p>Ошибка: {error.message} </p>
       </div>
@@ -66,12 +66,12 @@ function RecordDetails() {
   }
 
   return (
-    <div className="p-8">
-      <h1 className="text-4xl font-bold">FastAPI Integration</h1>
+    <div>
+      <h1>FastAPI Integration</h1>
 
       {isLoading ? (
-        <div className="p-8">
-          <h1 className="text-4xl font-bold">FastAPI Integration</h1>
+        <div>
+          <h1>FastAPI Integration</h1>
           <p>Загрузка...</p>
         </div>
       ) : (
