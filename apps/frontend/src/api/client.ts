@@ -52,7 +52,7 @@ const getMeFn = async ({
 const loginFn = async ({
     username,
     password
-}: { username: string, password: string }): Promise<{ access_token: string }> => {
+}: { username: string, password: string }): Promise<{ data: { access_token: string } }> => {
     return fetcher({
         path: "/auth/login",
         method: "post",

@@ -33,5 +33,5 @@ export default function useQuery<ResultData, QueryParams>({
         }
     }
 
-    return { data, isLoading, error, setData, setLoading, setError }
+    return { data, isLoading, error }
 }
