@@ -139,6 +139,26 @@ const registerFn = async ({
     });
 };
 
+const createRecordFn = async ({
+    accessToken,
+    courseId,
+}: {
+    accessToken: string;
+    courseId: string;
+}): Promise<RecordResponse> => {
+    return fetcher({
+        path: "/records/",
+        method: "post",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+            course_id: courseId,
+        }),
+    });
+};
+
 const deleteRecordFn = async ({
     accessToken,
     id,
@@ -161,7 +181,7 @@ export default {
     },
     records: {
         all: allRecordsFn,
-        create: null,
+        create: createRecordFn,
         delete: deleteRecordFn,
     },
     auth: {

@@ -115,12 +115,11 @@ function Records() {
                 <div>
                     <h1>Мои заявки</h1>
                     <p>Пользователь: {username}</p>
+
+                    <Link to="/records/create">Добавить заявку</Link>
                 </div>
 
-                <button
-                    type="button"
-                    onClick={handleLogout}
-                >
+                <button type="button" onClick={handleLogout}>
                     Выйти
                 </button>
             </header>
@@ -139,9 +138,7 @@ function Records() {
                                 <tr>
                                     <th>№</th>
                                     <th>Курс</th>
-                                    <th>
-                                        Дата создания
-                                    </th>
+                                    <th>Дата создания</th>
                                     <th>Действие</th>
                                 </tr>
                             </thead>
@@ -151,9 +148,7 @@ function Records() {
                                     <tr key={record.id}>
                                         <td>{record.id}</td>
 
-                                        <td>
-                                            {record.course.title}
-                                        </td>
+                                        <td>{record.course.title}</td>
 
                                         <td>
                                             {new Date(
@@ -179,11 +174,7 @@ function Records() {
                     </div>
                 )}
 
-                {deleteError && (
-                    <p>
-                        Ошибка удаления: {deleteError.message}
-                    </p>
-                )}
+                {deleteError && <p>Ошибка удаления: {deleteError.message}</p>}
             </section>
         </main>
     );
