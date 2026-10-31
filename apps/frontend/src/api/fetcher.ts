@@ -17,7 +17,7 @@ type FetcherOptions = {
     searchParams?: SearchParams
 }
 
-export default async ({ path, headers, method, body, searchParams = {} }: FetcherOptions) => {
+export default async <ResultType = void>({ path, headers, method, body, searchParams = {} }: FetcherOptions): Promise<ResultType> => {
     try {
         const url = new URL(path, baseUrl)
 

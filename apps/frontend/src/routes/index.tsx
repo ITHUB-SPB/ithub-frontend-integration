@@ -1,12 +1,11 @@
-import { useState, useEffect, forwardRef } from 'react'
+import { forwardRef } from 'react'
 import { createFileRoute, createLink, redirect, type LinkComponent } from '@tanstack/react-router'
 
 import apiClient from '#/api/client'
 import useQuery from '#/hooks/use-query'
 
-type UserSearch = {
-  username?: string
-}
+import * as types from '#/types'
+
 
 export const Route = createFileRoute('/')({
   beforeLoad: async ({ context }) => {
@@ -24,7 +23,7 @@ export const Route = createFileRoute('/')({
       }
     }
   },
-  validateSearch: (search: Record<string, unknown>): UserSearch => ({
+  validateSearch: (search: Record<string, unknown>): types.UserSearch => ({
     username: (search?.username as string) || undefined
   }),
   component: Home
@@ -32,23 +31,6 @@ export const Route = createFileRoute('/')({
 
 // TODO: добавлять фильтрацию в адрес
 
-type RecordItem = {
-  id: string
-  course: {
-    id: string,
-    title: string
-  }
-  author: {
-    username: string,
-    role: 'user'
-  }
-  created_at: string
-}
-
-type RecordQueryParams = {
-  accessToken: string | null;
-  authorId: string | null;
-}
 
 interface BaseRecordLinkProps extends React.TableHTMLAttributes<HTMLTableRowElement> { }
 
@@ -71,7 +53,7 @@ function Home() {
     data: records,
     isLoading,
     error,
-  } = useQuery<RecordItem[], RecordQueryParams>({
+  } = useQuery<types.RecordItem[], types.RecordQueryParams>({
     initialData: [],
     queryFn: apiClient.records.all,
     queryParams: {

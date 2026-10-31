@@ -1,4 +1,5 @@
 import fetcher from "./fetcher"
+import type { RecordsAll, LoginResultData, GetMeResultData } from "#/types"
 
 const allRecordsFn = async ({
     accessToken,
@@ -21,7 +22,7 @@ const allRecordsFn = async ({
         Object.assign(searchParams, { "author_id": authorId })
     }
 
-    return fetcher({
+    return fetcher<RecordsAll>({
         path: "/records",
         headers,
         method: "get",
@@ -33,7 +34,7 @@ const getMeFn = async ({
     accessToken,
 }: {
     accessToken: string | null,
-}): Promise<{ username: string, role: "user" | "admin" }> => {
+}): Promise<GetMeResultData> => {
     const headers = {
         "Content-Type": "application/json"
     } as const
@@ -42,7 +43,7 @@ const getMeFn = async ({
         Object.assign(headers, { "Authorization": `Bearer ${accessToken}` })
     }
 
-    return fetcher({
+    return fetcher<GetMeResultData>({
         path: "/auth/me",
         headers,
         method: "get",
@@ -52,8 +53,8 @@ const getMeFn = async ({
 const loginFn = async ({
     username,
     password
-}: { username: string, password: string }): Promise<{ data: { access_token: string } }> => {
-    return fetcher({
+}: { username: string, password: string }): Promise<LoginResultData> => {
+    const result = await fetcher<LoginResultData>({
         path: "/auth/login",
         method: "post",
         headers: {
@@ -63,12 +64,13 @@ const loginFn = async ({
             username,
             password
         })
-    }).then(data => {
-        if (!data.access_token) {
-            throw new Error('No access token provided')
-        }
-        return data
     })
+
+    if (!result.data.access_token) {
+        throw new Error('No access token provided')
+    }
+
+    return result
 }
 
 export default {
