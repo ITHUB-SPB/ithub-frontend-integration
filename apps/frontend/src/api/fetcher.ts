@@ -1,49 +1,78 @@
 const baseUrl = 'http://127.0.0.1:8000'
 
-type ContentType = "x-www-form-urlencoded" | "json"
+type SearchParams = Record<string, string | number | undefined>
 
-type Headers = {
-    Authorization?: `Bearer ${string}`;
-    "Content-Type"?: `application/${ContentType}`;
+type BaseOptions = {
+  path: `/${string}`
+  headers?: Record<string, string>
+  searchParams?: SearchParams
 }
 
-type SearchParams = Record<string, string | number>
-
-type FetcherOptions = {
-    path: `/${string}`;
-    headers: Headers;
-    method: 'get' | 'post';
-    body?: string | URLSearchParams;
-    searchParams?: SearchParams
+type GetOptions = BaseOptions & {
+  method: 'get' | 'delete'
+  body?: never
 }
 
-export default async <ResultType = void>({ path, headers, method, body, searchParams = {} }: FetcherOptions): Promise<ResultType> => {
-    try {
-        const url = new URL(path, baseUrl)
+type JsonPostOptions = BaseOptions & {
+  method: 'post'
+  headers: Record<string, string> & { 'Content-Type': 'application/json' }
+  body: object
+}
 
-        for (const [param, value] of Object.entries(searchParams)) {
-            url.searchParams.append(param, String(value))
-        }
+type FormPostOptions = BaseOptions & {
+  method: 'post'
+  headers: Record<string, string> & { 'Content-Type': 'application/x-www-form-urlencoded' }
+  body: URLSearchParams
+}
 
-        const requestInit = {
-            credentials: 'include',
-            method,
-            headers
-        } as RequestInit
+type FetcherOptions = GetOptions | JsonPostOptions | FormPostOptions
 
-        if (body) {
-            Object.assign(requestInit, { body })
-        }
+export default async function fetcher<ResultType = void>(
+  options: FetcherOptions,
+): Promise<ResultType> {
+  const { path, searchParams = {}, ...requestOptions } = options
+  const url = new URL(path, baseUrl)
 
-        const response = await fetch(url.toString(), requestInit)
-
-        if (!response.ok) {
-            throw new Error('Сетевая ошибка')
-        }
-
-        return await response.json()
-    } catch (error) {
-        console.error(error)
-        throw error
+  for (const [param, value] of Object.entries(searchParams)) {
+    if (value !== undefined) {
+      url.searchParams.append(param, String(value))
     }
+  }
+
+  const requestInit: RequestInit = {
+    credentials: 'include',
+    method: requestOptions.method,
+    headers: requestOptions.headers,
+  }
+
+  if ('body' in requestOptions) {
+    requestInit.body = requestOptions.body instanceof URLSearchParams
+      ? requestOptions.body
+      : JSON.stringify(requestOptions.body)
+  }
+
+  const response = await fetch(url, requestInit)
+
+  if (!response.ok) {
+    let message = `Ошибка ${response.status}`
+
+    try {
+      const errorData = await response.json() as { detail?: string | Array<{ msg?: string }> }
+      if (typeof errorData.detail === 'string') {
+        message = errorData.detail
+      } else if (Array.isArray(errorData.detail)) {
+        message = errorData.detail.map(error => error.msg).filter(Boolean).join(', ') || message
+      }
+    } catch {
+      message = response.statusText || message
+    }
+
+    throw new Error(message)
+  }
+
+  if (response.status === 204) {
+    return undefined as ResultType
+  }
+
+  return await response.json() as ResultType
 }

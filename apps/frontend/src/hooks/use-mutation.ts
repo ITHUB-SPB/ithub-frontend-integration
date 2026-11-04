@@ -1,32 +1,32 @@
-import { useState } from "react"
+import { useState } from 'react'
 
 type UseMutation<ResultData, MutationParams> = {
-    mutationFn: (props: MutationParams) => Promise<{ data: ResultData }>;
-    onSuccess?: (params: Awaited<ResultData>) => void;
+  mutationFn: (params: MutationParams) => Promise<ResultData>
+  onSuccess?: (data: ResultData) => void
 }
 
 export default function useMutation<ResultData, MutationParams>({
-    mutationFn,
-    onSuccess = () => { }
+  mutationFn,
+  onSuccess,
 }: UseMutation<ResultData, MutationParams>) {
-    const [data, setData] = useState<ResultData | null>(null)
-    const [isLoading, setLoading] = useState<boolean>(false)
-    const [error, setError] = useState<Error | null>(null)
+  const [data, setData] = useState<ResultData | null>(null)
+  const [isLoading, setLoading] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
 
-    const mutate = async (mutationParams: MutationParams) => {
-        setLoading(true)
-        setError(null)
+  const mutate = async (params: MutationParams) => {
+    setLoading(true)
+    setError(null)
 
-        try {
-            const result = await mutationFn(mutationParams)
-            setData(result.data)
-            onSuccess(result.data)
-        } catch (error: unknown) {
-            setError(error as Error)
-        } finally {
-            setLoading(false)
-        }
+    try {
+      const result = await mutationFn(params)
+      setData(result)
+      onSuccess?.(result)
+    } catch (error: unknown) {
+      setError(error as Error)
+    } finally {
+      setLoading(false)
     }
+  }
 
-    return { data, isLoading, error, mutate }
+  return { data, isLoading, error, mutate }
 }

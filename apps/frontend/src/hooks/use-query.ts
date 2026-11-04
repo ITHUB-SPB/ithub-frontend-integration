@@ -1,37 +1,43 @@
-import { useState, useEffect } from "react"
+import { useCallback, useEffect, useState } from 'react'
 
 type UseQuery<ResultData, QueryParams> = {
-    initialData: ResultData;
-    queryFn: (props: QueryParams) => Promise<{ data: ResultData }>;
-    queryParams: QueryParams
+  initialData: ResultData
+  queryFn: (params: QueryParams) => Promise<ResultData>
+  queryParams: QueryParams
+  enabled?: boolean
 }
 
 export default function useQuery<ResultData, QueryParams>({
-    initialData,
-    queryFn,
-    queryParams
+  initialData,
+  queryFn,
+  queryParams,
+  enabled = true,
 }: UseQuery<ResultData, QueryParams>) {
-    const [data, setData] = useState<ResultData>(initialData)
-    const [isLoading, setLoading] = useState<boolean>(false)
-    const [error, setError] = useState<Error | null>(null)
+  const [data, setData] = useState<ResultData>(initialData)
+  const [isLoading, setLoading] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
+  const paramsKey = JSON.stringify(queryParams)
 
-    useEffect(() => {
-        load()
-    }, [])
-
-    const load = async () => {
-        setLoading(true)
-        setError(null)
-
-        try {
-            const result = await queryFn(queryParams)
-            setData(result.data)
-        } catch (error: unknown) {
-            setError(error as Error)
-        } finally {
-            setLoading(false)
-        }
+  const load = useCallback(async () => {
+    if (!enabled) {
+      return
     }
 
-    return { data, isLoading, error }
+    setLoading(true)
+    setError(null)
+
+    try {
+      setData(await queryFn(queryParams))
+    } catch (error: unknown) {
+      setError(error as Error)
+    } finally {
+      setLoading(false)
+    }
+  }, [enabled, paramsKey, queryFn])
+
+  useEffect(() => {
+    void load()
+  }, [load])
+
+  return { data, isLoading, error, refetch: load }
 }

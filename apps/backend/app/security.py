@@ -25,7 +25,7 @@ def decode_access_token(token: str) -> schema.JwtSubject:
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-	return get_password_hash(plain_password) == hashed_password
+	return password_hasher.verify(plain_password, hashed_password)
 
 
 def get_password_hash(password: str) -> str:

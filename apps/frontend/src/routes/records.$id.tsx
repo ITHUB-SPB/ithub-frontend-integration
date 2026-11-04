@@ -1,90 +1,41 @@
-import { useState, useEffect } from 'react'
-import { createFileRoute, Link } from '@tanstack/react-router'
-
-type Record = {
-  id: string
-  course: string
-  user: string
-}
+import { createFileRoute, Link, redirect } from '@tanstack/react-router'
+import apiClient from '#/api/client'
+import useQuery from '#/hooks/use-query'
+import type { RecordDeleteParams, RecordItem } from '#/types'
 
 export const Route = createFileRoute('/records/$id')({
+  beforeLoad: ({ context }) => {
+    if (!context.accessToken) {
+      throw redirect({ to: '/login' })
+    }
+  },
   component: RecordDetails,
 })
 
 function RecordDetails() {
   const { id } = Route.useParams()
-
-  const [record, setRecord] = useState<Record | null>(null)
-  const [isLoading, setLoading] = useState<boolean>(false)
-  const [error, setError] = useState<Error | null>(null)
-
-  useEffect(() => {
-    loadRecord()
-  }, [])
-
-  const getRecord = async () => {
-    try {
-      const url = new URL(`/records/${id}`, 'http://127.0.0.1:8000')
-
-      const response = await fetch(url.toString())
-
-      if (response.status === 404) {
-        throw new Error('Запись не найдена')
-      }
-
-      if (!response.ok) {
-        throw new Error('Сетевая ошибка')
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error(error)
-      throw error
-    }
-  }
-
-  const loadRecord = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const record = await getRecord()
-      setRecord(record)
-    } catch (error: unknown) {
-      setError(error as Error)
-    }
-    setLoading(false)
-  }
-
-  if (error) {
-    return (
-      <div className="p-8">
-        <h1 className="text-4xl font-bold">FastAPI Integration</h1>
-        <Link to="/">Все записи</Link>
-        <p>Ошибка: {error.message} </p>
-      </div>
-    )
-  }
+  const { accessToken } = Route.useRouteContext()
+  const recordId = Number(id)
+  const { data: record, isLoading, error } = useQuery<RecordItem | null, RecordDeleteParams>({
+    initialData: null,
+    queryFn: apiClient.records.get,
+    queryParams: { accessToken: accessToken ?? '', id: recordId },
+    enabled: Boolean(accessToken && Number.isInteger(recordId)),
+  })
 
   return (
-    <div className="p-8">
-      <h1 className="text-4xl font-bold">FastAPI Integration</h1>
-
-      {isLoading ? (
-        <div className="p-8">
-          <h1 className="text-4xl font-bold">FastAPI Integration</h1>
-          <p>Загрузка...</p>
-        </div>
-      ) : (
+    <main className="container">
+      <Link to="/records">Назад к заявкам</Link>
+      <h1>Заявка</h1>
+      {isLoading && <p aria-busy="true">Загрузка...</p>}
+      {error && <p className="error">Ошибка: {error.message}</p>}
+      {record && (
         <article>
-          <header>Запись</header>
-          <main>
-            <p>{record?.course}</p>
-            <p>{record?.user}</p>
-          </main>
+          <h2>{record.course.title}</h2>
+          <p>Пользователь: {record.author.username}</p>
+          <p>Создана: {new Date(record.created_at).toLocaleString('ru-RU')}</p>
         </article>
       )}
-
-      <Link to="/">Все записи</Link>
-    </div>
+    </main>
   )
 }

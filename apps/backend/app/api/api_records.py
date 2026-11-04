@@ -27,6 +27,7 @@ records_router = APIRouter(
 	},
 )
 def get_records_list(
+	current_user: CurrentUser,
 	session: SessionDatabase,
 	limit: int = Query(20, title='Количество записей (по умолчанию 20)'),
 	offset: int = Query(0, title='Величина отступа (по умолчанию  0)'),
@@ -34,7 +35,11 @@ def get_records_list(
 	course: str = Query(None, title='Фильтр по курсу'),
 ) -> schema.RecordsListResponse:
 	return records_service.get_records_list(
-		session=session, limit=limit, offset=offset, course=course, author=author
+		session=session,
+		limit=limit,
+		offset=offset,
+		course=course,
+		author=current_user.username,
 	)
 
 
@@ -55,7 +60,6 @@ def create_record(
 	session: SessionDatabase,
 	new_record_payload: schema.RecordCreate,
 ) -> schema.RecordResponse:
-	print(current_user)
 	if not current_user:
 		raise CredentialsHTTPException
 
@@ -78,6 +82,7 @@ def create_record(
 	},
 )
 def get_record(
+	current_user: CurrentUser,
 	session: SessionDatabase,
 	id: int = Path(..., title='Идентификатор записи для чтения'),
 ) -> schema.RecordResponse:
@@ -85,6 +90,8 @@ def get_record(
 
 	if not record:
 		raise NotFoundHTTPException
+	if record.author_id != current_user.username:
+		raise NotAuthorizedHTTPException
 
 	return schema.RecordResponse.model_validate(record)
 

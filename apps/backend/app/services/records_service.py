@@ -40,7 +40,7 @@ def get_records_list(
 		for record in session.scalars(expr.limit(limit).offset(offset)).unique().all()
 	]
 
-	return schema.RecordsListResponse(records=paginated_records, records_count=len(records))
+	return schema.RecordsListResponse(data=paginated_records, data_count=len(records))
 
 
 def create_record(*, session: Session, course_id: str, author_id: str) -> models.Record | None:

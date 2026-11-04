@@ -18,4 +18,7 @@ courses_router = APIRouter(
 def get_courses_list(
 	session: SessionDatabase,
 ):
-	return courses_service.get_list(session=session)
+	return [
+		schema.Course.model_validate(course).model_copy(update={'records_count': count})
+		for course, count in courses_service.get_list(session=session)
+	]

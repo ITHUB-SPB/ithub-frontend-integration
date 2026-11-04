@@ -11,7 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as RecordsRouteImport } from './routes/records'
+import { Route as RegisterRouteImport } from './routes/register'
 import { Route as RecordsIdRouteImport } from './routes/records.$id'
+import { Route as RecordsCreateRouteImport } from './routes/records.create'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -23,40 +26,84 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RecordsIdRoute = RecordsIdRouteImport.update({
-  id: '/records/$id',
-  path: '/records/$id',
+const RecordsRoute = RecordsRouteImport.update({
+  id: '/records',
+  path: '/records',
   getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecordsIdRoute = RecordsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => RecordsRoute,
+} as any)
+const RecordsCreateRoute = RecordsCreateRouteImport.update({
+  id: '/create',
+  path: '/create',
+  getParentRoute: () => RecordsRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/records': typeof RecordsRouteWithChildren
+  '/register': typeof RegisterRoute
   '/records/$id': typeof RecordsIdRoute
+  '/records/create': typeof RecordsCreateRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/records': typeof RecordsRouteWithChildren
+  '/register': typeof RegisterRoute
   '/records/$id': typeof RecordsIdRoute
+  '/records/create': typeof RecordsCreateRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/records': typeof RecordsRouteWithChildren
+  '/register': typeof RegisterRoute
   '/records/$id': typeof RecordsIdRoute
+  '/records/create': typeof RecordsCreateRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/records/$id'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/records'
+    | '/register'
+    | '/records/$id'
+    | '/records/create'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/records/$id'
-  id: '__root__' | '/' | '/login' | '/records/$id'
+  to:
+    | '/'
+    | '/login'
+    | '/records'
+    | '/register'
+    | '/records/$id'
+    | '/records/create'
+  id:
+    | '__root__'
+    | '/'
+    | '/login'
+    | '/records'
+    | '/register'
+    | '/records/$id'
+    | '/records/create'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
-  RecordsIdRoute: typeof RecordsIdRoute
+  RecordsRoute: typeof RecordsRouteWithChildren
+  RegisterRoute: typeof RegisterRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -75,20 +122,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/records': {
+      id: '/records'
+      path: '/records'
+      fullPath: '/records'
+      preLoaderRoute: typeof RecordsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/records/$id': {
       id: '/records/$id'
-      path: '/records/$id'
+      path: '/$id'
       fullPath: '/records/$id'
       preLoaderRoute: typeof RecordsIdRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof RecordsRoute
+    }
+    '/records/create': {
+      id: '/records/create'
+      path: '/create'
+      fullPath: '/records/create'
+      preLoaderRoute: typeof RecordsCreateRouteImport
+      parentRoute: typeof RecordsRoute
     }
   }
 }
 
+interface RecordsRouteChildren {
+  RecordsIdRoute: typeof RecordsIdRoute
+  RecordsCreateRoute: typeof RecordsCreateRoute
+}
+
+const RecordsRouteChildren: RecordsRouteChildren = {
+  RecordsIdRoute: RecordsIdRoute,
+  RecordsCreateRoute: RecordsCreateRoute,
+}
+
+const RecordsRouteWithChildren =
+  RecordsRoute._addFileChildren(RecordsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
-  RecordsIdRoute: RecordsIdRoute,
+  RecordsRoute: RecordsRouteWithChildren,
+  RegisterRoute: RegisterRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

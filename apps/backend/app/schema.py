@@ -12,6 +12,7 @@ class BaseModel(PBaseModel):
 class Course(BaseModel):
 	id: str
 	title: str
+	records_count: int = 0
 
 
 class UserToken(BaseModel):

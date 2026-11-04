@@ -11,3 +11,34 @@ body,
 body {
   margin: 0;
 }
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.narrow {
+  max-width: 500px;
+}
+
+.error {
+  color: #b42318;
+}
+
+.success {
+  color: #067647;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.course-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
