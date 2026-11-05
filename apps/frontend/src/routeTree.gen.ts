@@ -11,7 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as RecordsIndexRouteImport } from './routes/records.index'
 import { Route as RecordsIdRouteImport } from './routes/records.$id'
+import { Route as RecordsCreateRouteImport } from './routes/records.create'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -23,40 +26,86 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecordsIndexRoute = RecordsIndexRouteImport.update({
+  id: '/records/',
+  path: '/records/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecordsIdRoute = RecordsIdRouteImport.update({
   id: '/records/$id',
   path: '/records/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecordsCreateRoute = RecordsCreateRouteImport.update({
+  id: '/records/create',
+  path: '/records/create',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
   '/records/$id': typeof RecordsIdRoute
+  '/records/create': typeof RecordsCreateRoute
+  '/records/': typeof RecordsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
   '/records/$id': typeof RecordsIdRoute
+  '/records/create': typeof RecordsCreateRoute
+  '/records': typeof RecordsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
   '/records/$id': typeof RecordsIdRoute
+  '/records/create': typeof RecordsCreateRoute
+  '/records/': typeof RecordsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/records/$id'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/register'
+    | '/records/$id'
+    | '/records/create'
+    | '/records/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/records/$id'
-  id: '__root__' | '/' | '/login' | '/records/$id'
+  to:
+    | '/'
+    | '/login'
+    | '/register'
+    | '/records/$id'
+    | '/records/create'
+    | '/records'
+  id:
+    | '__root__'
+    | '/'
+    | '/login'
+    | '/register'
+    | '/records/$id'
+    | '/records/create'
+    | '/records/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  RegisterRoute: typeof RegisterRoute
   RecordsIdRoute: typeof RecordsIdRoute
+  RecordsCreateRoute: typeof RecordsCreateRoute
+  RecordsIndexRoute: typeof RecordsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -75,11 +124,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/records/': {
+      id: '/records/'
+      path: '/records'
+      fullPath: '/records/'
+      preLoaderRoute: typeof RecordsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/records/$id': {
       id: '/records/$id'
       path: '/records/$id'
       fullPath: '/records/$id'
       preLoaderRoute: typeof RecordsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/records/create': {
+      id: '/records/create'
+      path: '/records/create'
+      fullPath: '/records/create'
+      preLoaderRoute: typeof RecordsCreateRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -88,7 +158,10 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  RegisterRoute: RegisterRoute,
   RecordsIdRoute: RecordsIdRoute,
+  RecordsCreateRoute: RecordsCreateRoute,
+  RecordsIndexRoute: RecordsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

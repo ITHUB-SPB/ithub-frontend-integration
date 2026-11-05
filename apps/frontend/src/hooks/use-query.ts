@@ -17,7 +17,7 @@ export default function useQuery<ResultData, QueryParams>({
 
     useEffect(() => {
         load()
-    }, [])
+    }, [JSON.stringify(queryParams)])
 
     const load = async () => {
         setLoading(true)

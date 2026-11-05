@@ -27,6 +27,7 @@ records_router = APIRouter(
 	},
 )
 def get_records_list(
+	current_user: CurrentUser,
 	session: SessionDatabase,
 	limit: int = Query(20, title='Количество записей (по умолчанию 20)'),
 	offset: int = Query(0, title='Величина отступа (по умолчанию  0)'),
@@ -34,8 +35,13 @@ def get_records_list(
 	course: str = Query(None, title='Фильтр по курсу'),
 ) -> schema.RecordsListResponse:
 	return records_service.get_records_list(
-		session=session, limit=limit, offset=offset, course=course, author=author
+		session=session, limit=limit, offset=offset, course=course, author=current_user.username
 	)
+
+
+@records_router.get('/summary')
+def get_records_summary(session: SessionDatabase) -> dict[str, int]:
+	return records_service.get_course_counts(session=session)
 
 
 @records_router.post(

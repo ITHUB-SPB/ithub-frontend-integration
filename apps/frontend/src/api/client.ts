@@ -1,12 +1,12 @@
 import fetcher from "./fetcher"
-import type { RecordsAll, LoginResultData, GetMeResultData } from "#/types"
+import type { RecordsAll, LoginResultData, GetMeResultData, RegisterParams, RecordCreateParams, RecordDeleteParams, Course } from "#/types"
 
 const allRecordsFn = async ({
     accessToken,
     authorId
 }: {
     accessToken: string | null,
-    authorId: string | null
+        authorId: string | null
 }) => {
     const headers = {
         "Content-Type": "application/json"
@@ -19,7 +19,7 @@ const allRecordsFn = async ({
     const searchParams = {}
 
     if (authorId) {
-        Object.assign(searchParams, { "author_id": authorId })
+        Object.assign(searchParams, { "author": authorId })
     }
 
     return fetcher<RecordsAll>({
@@ -29,6 +29,22 @@ const allRecordsFn = async ({
         searchParams
     })
 }
+
+const registerFn = ({ username, password }: RegisterParams) => fetcher<void>({
+    path: "/auth/", method: "post", headers: { "Content-Type": "application/json" }, body: { username, password }
+})
+
+const coursesFn = () => fetcher<Course[]>({ path: "/courses/", method: "get" })
+
+const summaryFn = () => fetcher<Record<string, number>>({ path: "/records/summary", method: "get" })
+
+const createRecordFn = ({ accessToken, course_id }: RecordCreateParams) => fetcher({
+    path: "/records/", method: "post", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${accessToken}` }, body: { course_id }
+})
+
+const deleteRecordFn = ({ accessToken, id }: RecordDeleteParams) => fetcher<void>({
+    path: `/records/${id}`, method: "delete", headers: { "Authorization": `Bearer ${accessToken}` }
+})
 
 const getMeFn = async ({
     accessToken,
@@ -53,7 +69,7 @@ const getMeFn = async ({
 const loginFn = async ({
     username,
     password
-}: { username: string, password: string }): Promise<LoginResultData> => {
+}: { username: string, password: string }): Promise<{ data: LoginResultData }> => {
     const result = await fetcher<LoginResultData>({
         path: "/auth/login",
         method: "post",
@@ -66,22 +82,24 @@ const loginFn = async ({
         })
     })
 
-    if (!result.data.access_token) {
+    if (!result.access_token) {
         throw new Error('No access token provided')
     }
 
-    return result
+    return { data: result }
 }
 
 export default {
     records: {
         all: allRecordsFn,
-        create: null,
-        delete: null,
+        create: createRecordFn,
+        delete: deleteRecordFn,
     },
     auth: {
         login: loginFn,
-        register: null,
-        me: getMeFn
+        register: registerFn,
+        me: getMeFn,
+        courses: coursesFn,
+        summary: summaryFn
     }
 }

@@ -1,135 +1,34 @@
-import { forwardRef } from 'react'
-import { createFileRoute, createLink, redirect, type LinkComponent } from '@tanstack/react-router'
-
+import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import apiClient from '#/api/client'
-import useQuery from '#/hooks/use-query'
-
-import * as types from '#/types'
+import { useEffect, useState } from 'react'
 
 
 export const Route = createFileRoute('/')({
   beforeLoad: async ({ context }) => {
-    if (!context.accessToken) {
-      throw redirect({ to: '/login' })
-    }
-
-    if (!context.username) {
-      try {
-        const { username } = await apiClient.auth.me({ accessToken: context.accessToken })
-        return { ...context, username }
-      } catch {
-        context.setAccessToken(null)
-        throw redirect({ to: '/login' })
-      }
-    }
+    if (context.accessToken) throw redirect({ to: '/records' })
   },
-  validateSearch: (search: Record<string, unknown>): types.UserSearch => ({
-    username: (search?.username as string) || undefined
-  }),
   component: Home
 })
 
-// TODO: добавлять фильтрацию в адрес
-
-
-interface BaseRecordLinkProps extends React.TableHTMLAttributes<HTMLTableRowElement> { }
-
-const BaseRecordLink = forwardRef<HTMLTableRowElement, BaseRecordLinkProps>((props, ref) => {
-  return <tr ref={ref} {...props}></tr>
-})
-
-const CreatedRecordLink = createLink(BaseRecordLink)
-
-const RecordLink: LinkComponent<typeof BaseRecordLink> = (props) => {
-  // @ts-expect-error // TODO: narrow children types
-  return <CreatedRecordLink {...props} style={{ cursor: "pointer" }} />
-}
-
 function Home() {
-  const { accessToken, username } = Route.useRouteContext()
-  const q = Route.useSearch()
-
-  const {
-    data: records,
-    isLoading,
-    error,
-  } = useQuery<types.RecordItem[], types.RecordQueryParams>({
-    initialData: [],
-    queryFn: apiClient.records.all,
-    queryParams: {
-      accessToken,
-      authorId: username
-    }
-  })
-
-  // const [search, setSearch] = useState<string | null>(q.username ?? null)
-
-  // useEffect(() => {
-  //   loadRecords()
-  // }, [search])
-
-  if (error) {
-    return (
-      <div className="p-8">
-        <h1 className="text-4xl font-bold">FastAPI Integration</h1>
-        <p>Ошибка: {error.message} </p>
-      </div>
-    )
-  }
+  const [courses, setCourses] = useState<{id: string; title: string}[]>([])
+  const [counts, setCounts] = useState<Record<string, number>>({})
+  const [error, setError] = useState('')
+  useEffect(() => {
+    Promise.all([apiClient.auth.courses(), apiClient.auth.summary()])
+      .then(([courseList, courseCounts]) => { setCourses(courseList); setCounts(courseCounts) })
+      .catch((reason: Error) => setError(reason.message))
+  }, [])
 
   return (
-    <div className="p-8">
-      <nav>
-        <span>{username}</span>
-      </nav>
-
-      <h1 className="text-4xl font-bold">FastAPI Integration</h1>
-
-      {/* <input
-        className="border"
-        type="text"
-        name="search"
-        placeholder='Поиск...'
-        value={search ?? ""}
-        onChange={e => setSearch(e.target.value)}
-      /> */}
-
-      {isLoading ? (
-        <div className="p-8">
-          <h1 className="text-4xl font-bold">FastAPI Integration</h1>
-          <p>Загрузка...</p>
-        </div>
-      ) : (
-        <table>
-          <thead>
-            <tr>
-              <td>№</td>
-              <td>Курс</td>
-              <td>Создан</td>
-              {/* <td>Пользователь</td> */}
-            </tr>
-          </thead>
-          <tbody>
-            {!records?.length
-              ? (
-                <tr>
-                  <td colSpan={3}>Записей пока нет</td>
-                </tr>
-              )
-              : records.map(({ id, course, created_at, author }) => (
-                <RecordLink to="/records/$id" params={{ id }} key={id}>
-                  <>
-                    <td>№ {id}</td>
-                    <td>{course.title}</td>
-                    {/* <td>{author.username}</td> */}
-                    <td>{created_at}</td>
-                  </>
-                </RecordLink>
-              ))
-            }
-          </tbody>
-        </table>
-      )}
-    </div>
+    <main className="container">
+      <h1>Курсы</h1>
+      {error && <p>Ошибка: {error}</p>}
+      {!courses.length && !error ? <p>Загрузка...</p> : <table>
+        <thead><tr><th>Курс</th><th>Количество заявок</th></tr></thead>
+        <tbody>{courses.map(course => <tr key={course.id}><td>{course.title}</td><td>{counts[course.id] || 0}</td></tr>)}</tbody>
+      </table>}
+      <p><Link to="/login">Войти</Link> или <Link to="/register">зарегистрироваться</Link></p>
+    </main>
   )
 }

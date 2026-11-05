@@ -11,13 +11,13 @@ type SearchParams = Record<string, string | number>
 
 type FetcherOptions = {
     path: `/${string}`;
-    headers: Headers;
-    method: 'get' | 'post';
-    body?: string | URLSearchParams;
+    headers?: Headers;
+    method: 'get' | 'post' | 'delete';
+    body?: string | URLSearchParams | Record<string, unknown>;
     searchParams?: SearchParams
 }
 
-export default async <ResultType = void>({ path, headers, method, body, searchParams = {} }: FetcherOptions): Promise<ResultType> => {
+export default async <ResultType = void>({ path, headers = {}, method, body, searchParams = {} }: FetcherOptions): Promise<ResultType> => {
     try {
         const url = new URL(path, baseUrl)
 
@@ -32,18 +32,23 @@ export default async <ResultType = void>({ path, headers, method, body, searchPa
         } as RequestInit
 
         if (body) {
-            Object.assign(requestInit, { body })
+            Object.assign(requestInit, { body: body instanceof URLSearchParams ? body : typeof body === 'string' ? body : JSON.stringify(body) })
         }
 
         const response = await fetch(url.toString(), requestInit)
 
         if (!response.ok) {
-            throw new Error('Сетевая ошибка')
+            let message = 'Сетевая ошибка'
+            try {
+                const result = await response.json()
+                message = result.detail || message
+            } catch {}
+            throw new Error(message)
         }
 
+        if (response.status === 204) return undefined as ResultType
         return await response.json()
     } catch (error) {
-        console.error(error)
         throw error
     }
 }

@@ -6,10 +6,15 @@ export type RecordItem = {
     }
     author: {
         username: string,
-        role: 'user'
+        role: 'user' | 'admin'
     }
     created_at: string
 }
+
+export type Course = { id: string; title: string }
+export type RecordCreateParams = { accessToken: string; course_id: string }
+export type RecordDeleteParams = { accessToken: string; id: string }
+export type RegisterParams = { username: string; password: string }
 
 export type RecordsAll = {
     data: RecordItem[],
@@ -26,9 +31,8 @@ export type UserSearch = {
 }
 
 export type LoginResultData = {
-    data: {
-        access_token: string;
-    };
+    access_token: string;
+    token_type: "bearer";
 }
 
 export type GetMeResultData = {
