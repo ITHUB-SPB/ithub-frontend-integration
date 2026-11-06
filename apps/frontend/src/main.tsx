@@ -2,7 +2,6 @@ import ReactDOM from 'react-dom/client'
 import { useState, useEffect } from 'react'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { routeTree } from './routeTree.gen'
-import apiClient from '#/api/client'
 
 const router = createRouter({
   routeTree,
@@ -30,26 +29,16 @@ const Wrapper = () => {
     () => localStorage.getItem(storageKey)
   )
 
-  const [username, setUsername] = useState<string | null>(null)
-
   useEffect(() => {
-    if (!accessToken) {
-      localStorage.removeItem(storageKey)
+    if (accessToken) {
+      localStorage.setItem(storageKey, accessToken);
     } else {
-      localStorage.setItem(storageKey, accessToken)
-
-      apiClient.auth.me({ accessToken })
-        .then(data => {
-          setUsername(data.username)
-        })
-        .catch((_: unknown) => {
-          setAccessToken(null)
-        })
+      localStorage.removeItem(storageKey);
     }
-  }, [accessToken])
+  }, [accessToken]);
 
   return (
-    <RouterProvider router={router} context={{ accessToken, username, setAccessToken }} />
+    <RouterProvider router={router} context={{ accessToken, username: null, setAccessToken }} />
   )
 }
 
