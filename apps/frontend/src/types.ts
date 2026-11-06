@@ -1,13 +1,17 @@
-export type RecordItem = {
+export type Course = {
     id: string;
-    course: {
-        id: string;
-        title: string;
-    };
-    author: {
-        username: string;
-        role: "user";
-    };
+    title: string;
+};
+
+export type User = {
+    username: string;
+    role: "user" | "admin";
+};
+
+export type RecordItem = {
+    id: number;
+    course: Course;
+    author: User;
     created_at: string;
 };
 
@@ -16,24 +20,22 @@ export type RecordsAll = {
     data_count: number;
 };
 
-export type RecordQueryParams = {
-    accessToken: string | null;
-    authorId: string | null;
-};
-
-export type UserSearch = {
-    username?: string;
-};
-
 export type LoginResultData = {
-    data: {
-        access_token: string;
-    };
+    access_token: string;
+    token_type: "bearer";
 };
 
-export type GetMeResultData = {
-    username: string;
-    role: "user" | "admin";
+export type GetMeResultData = User;
+
+export type RegisterResultData = boolean;
+
+export type RecordCreateData = {
+    course_id: string;
+};
+
+export type RecordQueryParams = {
+    accessToken?: string | null;
+    author?: string | null;
 };
 
 export type LoginMutationParams = {
@@ -41,7 +43,14 @@ export type LoginMutationParams = {
     password: string;
 };
 
-export type RegisterMutationParams = {
-    username: string;
-    password: string;
+export type RegisterMutationParams = LoginMutationParams;
+
+export type CreateRecordMutationParams = {
+    course_id: string;
+    accessToken: string;
+};
+
+export type DeleteRecordMutationParams = {
+    id: number;
+    accessToken: string;
 };

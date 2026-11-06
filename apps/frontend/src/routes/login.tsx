@@ -13,7 +13,7 @@ function Login() {
   const { setAccessToken } = Route.useRouteContext()
   const navigate = Route.useNavigate()
 
-  const { error, isLoading, mutate } = useMutation<types.LoginResultData, types.LoginMutationParams>({
+  const { error, isLoading, mutate } = useMutaчtion<types.LoginResultData, types.LoginMutationParams>({
     mutationFn: apiClient.auth.login,
     onSuccess: (result) => {
       setAccessToken(result.data.access_token)
