@@ -1,91 +1,73 @@
-import { forwardRef } from 'react'
-import { createFileRoute, createLink, redirect, type LinkComponent } from '@tanstack/react-router'
+import { useMemo } from "react";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 
-import apiClient from '#/api/client'
-import useQuery from '#/hooks/use-query'
+import apiClient from "#/api/client";
+import useQuery from "#/hooks/use-query";
 
-import * as types from '#/types'
+import type { Course, RecordsAll } from "#/types";
 
+export const Route = createFileRoute("/")({
+    beforeLoad: async ({ context }) => {
+        if (context.accessToken) {
+            try {
+                await apiClient.auth.me({
+                    accessToken: context.accessToken,
+                });
 
-export const Route = createFileRoute('/')({
-  beforeLoad: async ({ context }) => {
-    if (!context.accessToken) {
-      throw redirect({ to: '/login' })
-    }
+                throw redirect({ to: "/records" });
+            } catch (error) {
+                if (error instanceof Response) {
+                    throw error;
+                }
 
-    if (!context.username) {
-      try {
-        const { username } = await apiClient.auth.me({ accessToken: context.accessToken })
-        return { ...context, username }
-      } catch {
-        context.setAccessToken(null)
-        throw redirect({ to: '/login' })
-      }
-    }
-  },
-  validateSearch: (search: Record<string, unknown>): types.UserSearch => ({
-    username: (search?.username as string) || undefined
-  }),
-  component: Home
-})
-
-// TODO: добавлять фильтрацию в адрес
-
-
-interface BaseRecordLinkProps extends React.TableHTMLAttributes<HTMLTableRowElement> { }
-
-const BaseRecordLink = forwardRef<HTMLTableRowElement, BaseRecordLinkProps>((props, ref) => {
-  return <tr ref={ref} {...props}></tr>
-})
-
-const CreatedRecordLink = createLink(BaseRecordLink)
-
-const RecordLink: LinkComponent<typeof BaseRecordLink> = (props) => {
-  // @ts-expect-error // TODO: narrow children types
-  return <CreatedRecordLink {...props} style={{ cursor: "pointer" }} />
-}
+                context.setAccessToken(null);
+            }
+        }
+    },
+    component: Home,
+});
 
 function Home() {
-  const { accessToken, username } = Route.useRouteContext()
-  const q = Route.useSearch()
+    const coursesQuery = useQuery<Course[], void>({
+        initialData: [],
+        queryFn: apiClient.courses.all,
+        queryParams: undefined,
+    });
 
-  const {
-    data: records,
-    isLoading,
-    error,
-  } = useQuery<types.RecordItem[], types.RecordQueryParams>({
-    initialData: [],
-    queryFn: apiClient.records.all,
-    queryParams: {
-      accessToken,
-      authorId: username
-    }
-  })
+    const emptyParams = useMemo(() => ({}), []);
 
-  // const [search, setSearch] = useState<string | null>(q.username ?? null)
+    const recordsQuery = useQuery<RecordsAll, typeof emptyParams>({
+        initialData: {
+            data: [],
+            data_count: 0,
+        },
+        queryFn: apiClient.records.all,
+        queryParams: emptyParams,
+    });
 
-  // useEffect(() => {
-  //   loadRecords()
-  // }, [search])
+    const courseCounts = useMemo(() => {
+        return coursesQuery.data.map((course) => ({
+            ...course,
+            count: recordsQuery.data.data.filter(
+                (record) => record.course.id === course.id,
+            ).length,
+        }));
+    }, [coursesQuery.data, recordsQuery.data]);
 
-  if (error) {
+    const isLoading = coursesQuery.isLoading || recordsQuery.isLoading;
+    const error = coursesQuery.error || recordsQuery.error;
+
     return (
-      <div className="p-8">
-        <h1 className="text-4xl font-bold">FastAPI Integration</h1>
-        <p>Ошибка: {error.message} </p>
-      </div>
-    )
-  }
+        <div className="p-8">
+            <nav>
+                <Link to="/login">Войти</Link>
+                {" | "}
+                <Link to="/register">Зарегистрироваться</Link>
+            </nav>
 
-  return (
-    <div className="p-8">
-      <nav>
-        <span>{username}</span>
-      </nav>
+            <h1 className="text-4xl font-bold">FastAPI Integration</h1>
 
-      <h1 className="text-4xl font-bold">FastAPI Integration</h1>
-
-      {/* <input
+            {/* <input
         className="border"
         type="text"
         name="search"
@@ -94,42 +76,34 @@ function Home() {
         onChange={e => setSearch(e.target.value)}
       /> */}
 
-      {isLoading ? (
-        <div className="p-8">
-          <h1 className="text-4xl font-bold">FastAPI Integration</h1>
-          <p>Загрузка...</p>
+            {isLoading ? (
+                <p aria-busy="true">Загрузка курсов...</p>
+            ) : error ? (
+                <p role="alert">Ошибка: {error.message}</p>
+            ) : (
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Курс</th>
+                            <th>Количество заявок</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {courseCounts.map((course) => (
+                            <tr key={course.id}>
+                                <td>{course.title}</td>
+                                <td>{course.count}</td>
+                            </tr>
+                        ))}
+
+                        {!courseCounts.length && (
+                            <tr>
+                                <td colSpan={2}>Курсов пока нет</td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            )}
         </div>
-      ) : (
-        <table>
-          <thead>
-            <tr>
-              <td>№</td>
-              <td>Курс</td>
-              <td>Создан</td>
-              {/* <td>Пользователь</td> */}
-            </tr>
-          </thead>
-          <tbody>
-            {!records?.length
-              ? (
-                <tr>
-                  <td colSpan={3}>Записей пока нет</td>
-                </tr>
-              )
-              : records.map(({ id, course, created_at, author }) => (
-                <RecordLink to="/records/$id" params={{ id }} key={id}>
-                  <>
-                    <td>№ {id}</td>
-                    <td>{course.title}</td>
-                    {/* <td>{author.username}</td> */}
-                    <td>{created_at}</td>
-                  </>
-                </RecordLink>
-              ))
-            }
-          </tbody>
-        </table>
-      )}
-    </div>
-  )
+    );
 }

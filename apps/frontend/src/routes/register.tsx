@@ -1,56 +1,90 @@
-import type { SubmitEvent } from "react";
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import type { ComponentProps } from "react";
+
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+
 import apiClient from "#/api/client";
 import useMutation from "#/hooks/use-mutation";
-import * as types from "#/types";
+
+import type { RegisterMutationParams, RegisterResultData } from "#/types";
 
 export const Route = createFileRoute("/register")({
-    component: Register,
-    beforeLoad: ({ context }) => {
+    beforeLoad: async ({ context }) => {
         if (context.accessToken) {
-            throw redirect({ to: "/" });
+            try {
+                await apiClient.auth.me({
+                    accessToken: context.accessToken,
+                });
+
+                throw redirect({ to: "/records" });
+            } catch (error) {
+                if (error instanceof Response) {
+                    throw error;
+                }
+
+                context.setAccessToken(null);
+            }
         }
     },
+    component: Register,
 });
 
 function Register() {
     const navigate = Route.useNavigate();
 
     const { error, isLoading, mutate } = useMutation<
-        null,
-        types.RegisterMutationParams
+        RegisterResultData,
+        RegisterMutationParams
     >({
         mutationFn: apiClient.auth.register,
         onSuccess: () => {
-            navigate({ to: "/" });
+            void navigate({
+                to: "/login",
+                search: {
+                    registered: true,
+                },
+            });
         },
     });
 
-    const handleSubmit = (e: SubmitEvent) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const username = formData.get("username") as string;
-        const password = formData.get("password") as string;
+    const handleSubmit: ComponentProps<"form">["onSubmit"] = (event) => {
+        event.preventDefault();
 
-        mutate({ password, username });
+        const formData = new FormData(event.currentTarget);
+
+        const username = String(formData.get("username") ?? "");
+        const password = String(formData.get("password") ?? "");
+
+        void mutate({ username, password });
     };
 
-    return isLoading ? (
-        <p>Загрузка...</p>
-    ) : (
-        <form method="post" onSubmit={handleSubmit}>
-            {error ? <p>Ошибка: {error.message}</p> : null}
+    return (
+        <main>
+            <h1>Регистрация</h1>
 
-            <input type="text" name="username" placeholder="Логин" required />
-            <input
-                type="password"
-                name="password"
-                placeholder="Пароль"
-                required
-            />
-            <button type="submit">Зарегистрироваться</button>
+            <form onSubmit={handleSubmit}>
+                {error && <p role="alert">Ошибка: {error.message}</p>}
 
-            <a href="/login">Уже зарегистрирован</a>
-        </form>
+                <label>
+                    Логин
+                    <input type="text" name="username" minLength={2} required />
+                </label>
+
+                <label>
+                    Пароль
+                    <input
+                        type="password"
+                        name="password"
+                        minLength={6}
+                        required
+                    />
+                </label>
+
+                <button type="submit" disabled={isLoading}>
+                    {isLoading ? "Регистрация..." : "Зарегистрироваться"}
+                </button>
+
+                <Link to="/login">Уже зарегистрированы?</Link>
+            </form>
+        </main>
     );
 }
