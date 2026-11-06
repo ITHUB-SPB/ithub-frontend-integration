@@ -20,11 +20,12 @@ auth_router = APIRouter(prefix='/auth', tags=['Аккаунты'])
 def register(
 	session: SessionDatabase,
 	new_user_payload: schema.User,
-) -> None:
+) -> bool:
 	if users_service.get_by_username(session=session, username=new_user_payload.username):
 		raise exceptions.ConflictHTTPException
 
 	auth_service.register(session=session, user_data=new_user_payload)
+	return True
 
 
 @auth_router.post(
