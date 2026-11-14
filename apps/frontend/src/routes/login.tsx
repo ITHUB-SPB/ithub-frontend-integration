@@ -2,21 +2,29 @@ import type { SubmitEvent } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import apiClient from '#/api/client'
 import useMutation from '#/hooks/use-mutation'
-import * as types from '#/types'
 
 export const Route = createFileRoute('/login')({
   component: Login,
 })
 
+type LoginResultData = {
+  
+    access_token: string;
+}
+
+type LoginMutationParams = {
+  username: string;
+  password: string;
+}
 
 function Login() {
   const { setAccessToken } = Route.useRouteContext()
   const navigate = Route.useNavigate()
 
-  const { error, isLoading, mutate } = useMutation<types.LoginResultData, types.LoginMutationParams>({
+  const { data, error, isLoading, mutate } = useMutation<LoginResultData, LoginMutationParams>({
     mutationFn: apiClient.auth.login,
-    onSuccess: (result) => {
-      setAccessToken(result.data.access_token)
+    onSuccess: (result: LoginResultData) => {
+      setAccessToken(result.access_token)
       navigate({ to: '/' })
     }
   })
@@ -30,7 +38,7 @@ function Login() {
     mutate({ password, username })
   }
 
-  return isLoading ? <p>Загрузка...</p> : (
+  return (
     <form method='post' onSubmit={handleSubmit}>
       {error ? <p>Ошибка: {error.message}</p> : null}
 

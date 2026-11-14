@@ -1,7 +1,7 @@
 import { useState } from "react"
 
 type UseMutation<ResultData, MutationParams> = {
-    mutationFn: (props: MutationParams) => Promise<{ data: ResultData }>;
+    mutationFn: (props: MutationParams) => Promise<ResultData>;
     onSuccess?: (params: Awaited<ResultData>) => void;
 }
 
@@ -19,8 +19,8 @@ export default function useMutation<ResultData, MutationParams>({
 
         try {
             const result = await mutationFn(mutationParams)
-            setData(result.data)
-            onSuccess(result.data)
+            setData(result)
+            onSuccess(result)
         } catch (error: unknown) {
             setError(error as Error)
         } finally {

@@ -17,7 +17,7 @@ type FetcherOptions = {
     searchParams?: SearchParams
 }
 
-export default async <ResultType = void>({ path, headers, method, body, searchParams = {} }: FetcherOptions): Promise<ResultType> => {
+export default async ({ path, headers, method, body, searchParams = {} }: FetcherOptions) => {
     try {
         const url = new URL(path, baseUrl)
 
@@ -35,11 +35,26 @@ export default async <ResultType = void>({ path, headers, method, body, searchPa
             Object.assign(requestInit, { body })
         }
 
-        const response = await fetch(url.toString(), requestInit)
+       const response = await fetch(url.toString(), requestInit)
 
-        if (!response.ok) {
-            throw new Error('Сетевая ошибка')
+       if (!response.ok) {
+            let errorMessage = 'Сетевая ошибка'
+            try {
+                const errorData = await response.json()
+                if (typeof errorData.detail === 'string') {
+                    errorMessage = errorData.detail
+                } else if (Array.isArray(errorData.detail)) {
+                    errorMessage = errorData.detail.map((err: any) => err.msg).join(', ')
+                } else {
+                    errorMessage = JSON.stringify(errorData)
+                }
+            } catch {
+                errorMessage = response.statusText || 'Сетевая ошибка'
+            }
+            throw new Error(errorMessage)
         }
+
+        return await response.json()
 
         return await response.json()
     } catch (error) {

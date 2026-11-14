@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 
 type UseQuery<ResultData, QueryParams> = {
     initialData: ResultData;
@@ -15,11 +15,7 @@ export default function useQuery<ResultData, QueryParams>({
     const [isLoading, setLoading] = useState<boolean>(false)
     const [error, setError] = useState<Error | null>(null)
 
-    useEffect(() => {
-        load()
-    }, [])
-
-    const load = async () => {
+    const load = useCallback(async () => {
         setLoading(true)
         setError(null)
 
@@ -31,7 +27,11 @@ export default function useQuery<ResultData, QueryParams>({
         } finally {
             setLoading(false)
         }
-    }
+    }, [queryFn, JSON.stringify(queryParams)])
 
-    return { data, isLoading, error }
+    useEffect(() => {
+        load()
+    }, [load])
+
+    return { data, isLoading, error, refetch: load }
 }

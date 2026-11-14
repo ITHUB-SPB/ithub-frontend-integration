@@ -1,66 +1,48 @@
-import { useState, useEffect } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
-
-type Record = {
-  id: string
-  course: string
-  user: string
-}
+import apiClient from '#/api/client'
+import useQuery from '#/hooks/use-query'
 
 export const Route = createFileRoute('/records/$id')({
   component: RecordDetails,
 })
 
-function RecordDetails() {
+type RecordDetail = {
+  id: string
+  course: {
+    id: string
+    title: string
+  }
+  author: {
+    username: string
+    role: string
+  }
+  created_at: string
+}
+
+export default function RecordDetails() {
   const { id } = Route.useParams()
+  const { accessToken } = Route.useRouteContext()
 
-  const [record, setRecord] = useState<Record | null>(null)
-  const [isLoading, setLoading] = useState<boolean>(false)
-  const [error, setError] = useState<Error | null>(null)
-
-  useEffect(() => {
-    loadRecord()
-  }, [])
-
-  const getRecord = async () => {
-    try {
-      const url = new URL(`/records/${id}`, 'http://127.0.0.1:8000')
-
-      const response = await fetch(url.toString())
-
-      if (response.status === 404) {
-        throw new Error('Запись не найдена')
-      }
-
-      if (!response.ok) {
-        throw new Error('Сетевая ошибка')
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error(error)
-      throw error
-    }
-  }
-
-  const loadRecord = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const record = await getRecord()
-      setRecord(record)
-    } catch (error: unknown) {
-      setError(error as Error)
-    }
-    setLoading(false)
-  }
+  const { data: record, isLoading, error } = useQuery<RecordDetail | null, { accessToken: string | null; id: string }>({
+    initialData: null,
+    queryFn: async ({ accessToken, id }) => {
+      const res = await fetch(`http://127.0.0.1:8000/records/${id}`, {
+        headers: {
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+        }
+      })
+      if (!res.ok) throw new Error('Не удалось загрузить запись')
+      return res.json()
+    },
+    queryParams: { accessToken, id }
+  })
 
   if (error) {
     return (
       <div className="p-8">
         <h1 className="text-4xl font-bold">FastAPI Integration</h1>
+        <p style={{ color: 'red' }}>Ошибка: {error.message}</p>
         <Link to="/">Все записи</Link>
-        <p>Ошибка: {error.message} </p>
       </div>
     )
   }
@@ -70,21 +52,23 @@ function RecordDetails() {
       <h1 className="text-4xl font-bold">FastAPI Integration</h1>
 
       {isLoading ? (
-        <div className="p-8">
-          <h1 className="text-4xl font-bold">FastAPI Integration</h1>
-          <p>Загрузка...</p>
-        </div>
-      ) : (
-        <article>
-          <header>Запись</header>
+        <p>Загрузка...</p>
+      ) : record ? (
+        <article style={{ marginTop: '20px' }}>
+          <header>Запись № {record.id}</header>
           <main>
-            <p>{record?.course}</p>
-            <p>{record?.user}</p>
+            <p><strong>Курс:</strong> {record.course?.title}</p>
+            <p><strong>Автор:</strong> {record.author?.username}</p>
+            <p><strong>Дата создания:</strong> {record.created_at}</p>
           </main>
         </article>
+      ) : (
+        <p>Запись не найдена</p>
       )}
 
-      <Link to="/">Все записи</Link>
+      <p style={{ marginTop: '20px' }}>
+        <Link to="/">← Все записи</Link>
+      </p>
     </div>
   )
 }
